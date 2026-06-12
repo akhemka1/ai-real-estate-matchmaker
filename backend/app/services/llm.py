@@ -48,12 +48,41 @@ class LLMService:
 
     # --- Free-text generation -------------------------------------------
     def complete(self, *, system: str, prompt: str, max_tokens: int | None = None) -> str:
-        """Free-text generation. Uses Anthropic when set, else Gemini (free tier)."""
+        """Free-text generation. Provider priority: Anthropic > Groq > Gemini."""
         if settings.anthropic_api_key:
             return self._anthropic_complete(system=system, prompt=prompt, max_tokens=max_tokens)
+        if settings.groq_api_key:
+            return self._groq_complete(system=system, prompt=prompt, max_tokens=max_tokens)
         if settings.gemini_api_key:
             return self._gemini_complete(system=system, prompt=prompt, max_tokens=max_tokens)
         raise LLMNotConfiguredError("No LLM provider configured")
+
+    def _groq_complete(self, *, system: str, prompt: str, max_tokens: int | None = None) -> str:
+        """Call Groq's free OpenAI-compatible API via httpx — no extra deps."""
+        import httpx
+
+        resp = httpx.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {settings.groq_api_key}"},
+            json={
+                "model": settings.groq_model,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": prompt},
+                ],
+                "max_tokens": max_tokens or settings.anthropic_max_tokens,
+            },
+            timeout=settings.anthropic_timeout_seconds,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        choices = data.get("choices") or []
+        if not choices:
+            raise RuntimeError(f"Groq returned no choices: {data}")
+        text = (choices[0].get("message", {}).get("content") or "").strip()
+        if not text:
+            raise RuntimeError("Groq returned an empty response")
+        return text
 
     def _anthropic_complete(self, *, system: str, prompt: str, max_tokens: int | None = None) -> str:
         client = self._client()

@@ -84,6 +84,13 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.0-flash"
 
+    # --- AI / LLM (Groq — free, OpenAI-compatible, runs Llama models) ---------
+    # When GROQ_API_KEY is set, text generation can use Groq's free tier (no card,
+    # works globally). Get a free key at https://console.groq.com.
+    # Provider priority: Anthropic > Groq > Gemini.
+    groq_api_key: str | None = None
+    groq_model: str = "llama-3.3-70b-versatile"
+
     # --- Object storage for property media (S3-compatible) -------------------
     # Works with AWS S3, Cloudflare R2, MinIO, etc. When unset, the media
     # upload endpoints report 503 (not configured) and the rest of the API is
@@ -129,12 +136,14 @@ class Settings(BaseSettings):
 
     @property
     def ai_enabled(self) -> bool:
-        return bool(self.anthropic_api_key or self.gemini_api_key)
+        return bool(self.anthropic_api_key or self.groq_api_key or self.gemini_api_key)
 
     @property
     def active_ai_provider(self) -> str:
         if self.anthropic_api_key:
             return "anthropic"
+        if self.groq_api_key:
+            return "groq"
         if self.gemini_api_key:
             return "gemini"
         return "heuristic"
@@ -143,6 +152,8 @@ class Settings(BaseSettings):
     def active_ai_model(self) -> str | None:
         if self.anthropic_api_key:
             return self.anthropic_model
+        if self.groq_api_key:
+            return self.groq_model
         if self.gemini_api_key:
             return self.gemini_model
         return None
