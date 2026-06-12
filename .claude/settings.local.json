@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(python -m ruff check app --statistics 2>&1)",
+      "PowerShell(python -m ruff check app --fix 2>&1)",
+      "PowerShell(python -m ruff check app --select F 2>&1)",
+      "PowerShell(Set-Location C:\\\\Users\\\\Lenovo\\\\Projects\\\\ai-real-estate-matchmaker; Get-ChildItem -Recurse -Path src -File | Where-Object { $_.FullName -notmatch 'node_modules' } | Select-Object -ExpandProperty FullName; Write-Output \"---package.json---\"; Get-Content package.json)",
+      "PowerShell(Set-Location C:\\\\Users\\\\Lenovo\\\\Projects\\\\ai-real-estate-matchmaker; $imgs = Select-String -Path src\\\\lib\\\\mock-data.ts -Pattern 'images\\\\.unsplash\\\\.com/photo-\\([a-z0-9-]+\\)' -AllMatches | ForEach-Object { $_.Matches } | ForEach-Object { $_.Groups[1].Value }; Write-Output \"Total image refs: $\\($imgs.Count\\)\"; Write-Output \"Unique image refs: $\\(@\\($imgs | Sort-Object -Unique\\).Count\\)\"; Write-Output \"--- Duplicates \\(should be none\\): ---\"; $imgs | Group-Object | Where-Object { $_.Count -gt 1 } | ForEach-Object { \"$\\($_.Count\\)x  $\\($_.Name\\)\" })",
+      "PowerShell(Set-Location C:\\\\Users\\\\Lenovo\\\\Projects\\\\ai-real-estate-matchmaker; Write-Output \"Property image arrays:\"; Select-String -Path src\\\\lib\\\\mock-data.ts -Pattern 'images: propertyImages\\\\\\(\\(\\\\d+\\)\\\\\\)' | ForEach-Object { $_.Matches.Value }; Write-Output \"`nResulting unique image count: 10 properties x 5 themes = 50 unique URLs \\(locks 10-104\\)\")",
+      "PowerShell(Set-Location C:\\\\Users\\\\Lenovo\\\\Projects\\\\ai-real-estate-matchmaker; npm run type-check 2>&1 | Select-String -Pattern 'error TS' | ForEach-Object { $_.Line })",
+      "WebFetch(domain:rem-app.com)",
+      "PowerShell(Set-Location C:\\\\Users\\\\Lenovo\\\\Projects\\\\ai-real-estate-matchmaker; npm run type-check 2>&1 | Select-String -Pattern 'error TS' | ForEach-Object { $_.Line }; npm run type-check 2>&1 | Out-Null; Write-Output \"frontend tsc exit: $LASTEXITCODE\")",
+      "PowerShell(Set-Location C:\\\\Users\\\\Lenovo\\\\Projects\\\\ai-real-estate-matchmaker\\\\backend; $env:DATABASE_URL=\"sqlite://\"; python -c \"from app.main import app; p=app.openapi\\(\\)['paths']; print\\('total routes:', len\\(p\\)\\); print\\('off-plan:', [k for k in p if '/projects' in k]\\); print\\('leads:', [k for k in p if '/leads' in k]\\)\")"
+    ]
+  }
+}

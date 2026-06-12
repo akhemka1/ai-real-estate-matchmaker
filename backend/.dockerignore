@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.db
+.env
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.git/
+tests/
+uvicorn.*.log
