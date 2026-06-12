@@ -55,6 +55,13 @@ function esc(value: string): string {
   );
 }
 
+// Classic Google-style red teardrop marker.
+const GOOGLE_PIN =
+  '<svg width="26" height="38" viewBox="0 0 26 38" xmlns="http://www.w3.org/2000/svg">' +
+  '<path d="M13 0C6 0 0.5 5.5 0.5 12.5 0.5 22 13 38 13 38s12.5-16 12.5-25.5C25.5 5.5 20 0 13 0z" ' +
+  'fill="#EA4335" stroke="#B31412" stroke-width="0.5"/>' +
+  '<circle cx="13" cy="12.5" r="4.5" fill="#7B1B12"/></svg>';
+
 export function PropertyMap() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -68,28 +75,45 @@ export function PropertyMap() {
       .then((L: Leaflet) => {
         if (cancelled || !containerRef.current || mapRef.current) return;
 
-        const map = L.map(containerRef.current, { scrollWheelZoom: true }).setView([20, 10], 2);
+        const map = L.map(containerRef.current, {
+          scrollWheelZoom: true,
+          zoomControl: false,
+        }).setView([20, 10], 2);
         mapRef.current = map;
+        L.control.zoom({ position: "bottomright" }).addTo(map);
 
-        const street = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap contributors",
-          maxZoom: 19,
-        }).addTo(map);
-        const satellite = L.tileLayer(
-          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-          { attribution: "Tiles &copy; Esri", maxZoom: 19 }
-        );
-        L.control.layers({ Street: street, Satellite: satellite }, {}, { position: "topright" }).addTo(map);
+        // Google-Maps-style clean basemap (CARTO Voyager — keyless, free).
+        const roadmap = L.tileLayer(
+          "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+          {
+            subdomains: "abcd",
+            maxZoom: 20,
+            attribution: "&copy; OpenStreetMap, &copy; CARTO",
+          }
+        ).addTo(map);
+
+        // Satellite + place-label overlay = a Google "hybrid"-style view.
+        const satellite = L.layerGroup([
+          L.tileLayer(
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            { maxZoom: 20, attribution: "Tiles &copy; Esri" }
+          ),
+          L.tileLayer(
+            "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+            { maxZoom: 20 }
+          ),
+        ]);
+
+        L.control
+          .layers({ Map: roadmap, Satellite: satellite }, {}, { position: "topright" })
+          .addTo(map);
 
         const pinIcon = L.divIcon({
           className: "",
-          html:
-            '<div style="width:18px;height:18px;border-radius:50% 50% 50% 0;' +
-            "background:#2f6bff;transform:rotate(-45deg);border:2px solid #fff;" +
-            'box-shadow:0 1px 4px rgba(0,0,0,.45)"></div>',
-          iconSize: [18, 18],
-          iconAnchor: [9, 18],
-          popupAnchor: [0, -16],
+          html: GOOGLE_PIN,
+          iconSize: [26, 38],
+          iconAnchor: [13, 38],
+          popupAnchor: [0, -34],
         });
 
         const markers: any[] = [];
@@ -98,19 +122,18 @@ export function PropertyMap() {
           if (typeof lat !== "number" || typeof lng !== "number") continue;
           const price = formatMarketPrice(p.price, p.listingType, p.currency);
           const popup =
-            '<div style="min-width:180px">' +
-            `<img src="${esc(p.images[0])}" alt="" style="width:100%;height:96px;object-fit:cover;border-radius:8px;margin-bottom:6px"/>` +
+            '<div style="min-width:190px">' +
+            `<img src="${esc(p.images[0])}" alt="" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:6px"/>` +
             `<strong style="font-size:13px">${esc(p.title)}</strong><br/>` +
-            `<span style="color:#64748b;font-size:12px">${esc(p.address.city)}, ${esc(p.address.country)}</span><br/>` +
-            `<span style="font-weight:700;font-size:13px">${esc(price)}</span><br/>` +
-            `<a href="/properties/${p.id}" style="color:#2f6bff;font-size:12px;font-weight:600">View details &rarr;</a>` +
+            `<span style="color:#5f6368;font-size:12px">${esc(p.address.street)}, ${esc(p.address.city)}, ${esc(p.address.country)}</span><br/>` +
+            `<span style="font-weight:700;font-size:14px;color:#202124">${esc(price)}</span><br/>` +
+            `<a href="/properties/${p.id}" style="color:#1a73e8;font-size:12px;font-weight:600">View details &rarr;</a>` +
             "</div>";
-          markers.push(L.marker([lat, lng], { icon: pinIcon }).addTo(map).bindPopup(popup));
+          markers.push(L.marker([lat, lng], { icon: pinIcon, title: p.title }).addTo(map).bindPopup(popup));
         }
 
         if (markers.length) {
-          const group = L.featureGroup(markers);
-          map.fitBounds(group.getBounds().pad(0.25));
+          map.fitBounds(L.featureGroup(markers).getBounds().pad(0.25));
         }
         setLoaded(true);
       })
@@ -128,7 +151,7 @@ export function PropertyMap() {
   }, []);
 
   return (
-    <div className="relative h-[560px] w-full overflow-hidden rounded-2xl border shadow-card">
+    <div className="relative h-[600px] w-full overflow-hidden rounded-2xl border shadow-card">
       <div ref={containerRef} className="absolute inset-0" style={{ zIndex: 0 }} />
       {!loaded && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-muted text-sm text-muted-foreground">
