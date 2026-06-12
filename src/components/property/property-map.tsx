@@ -82,13 +82,13 @@ export function PropertyMap() {
         mapRef.current = map;
         L.control.zoom({ position: "bottomright" }).addTo(map);
 
-        // Google-Maps-style clean basemap (CARTO Voyager — keyless, free).
+        // Google-Maps-style basemap with English (Latin-script) labels globally
+        // (Esri World Street Map — keyless, free).
         const roadmap = L.tileLayer(
-          "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
           {
-            subdomains: "abcd",
-            maxZoom: 20,
-            attribution: "&copy; OpenStreetMap, &copy; CARTO",
+            maxZoom: 19,
+            attribution: "Tiles &copy; Esri",
           }
         ).addTo(map);
 
