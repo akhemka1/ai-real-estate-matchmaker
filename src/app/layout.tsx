@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { ChatWidget } from "@/components/ai/chat-widget";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
 
@@ -51,7 +52,10 @@ export default function RootLayout({
         <Script id="theme-init" strategy="beforeInteractive">
           {`(function(){try{var k='nestmatch-theme';var t=localStorage.getItem(k)||'system';var s=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';var r=t==='system'?s:t;document.documentElement.classList.toggle('dark',r==='dark');document.documentElement.style.colorScheme=r;}catch(e){}})();`}
         </Script>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <ChatWidget />
+        </Providers>
       </body>
     </html>
   );
