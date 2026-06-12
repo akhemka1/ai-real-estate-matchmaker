@@ -101,7 +101,7 @@ export function BlogShowcase() {
               <CardTitle className="text-3xl leading-tight">Make the blog support sales conversations.</CardTitle>
               <CardDescription className="text-base leading-7">
                 Keep the writing short, clear, and market-aware so every article reinforces trust,
-                global reach, and the product's value to buyers, sellers, brokers, and agents.
+                global reach, and the product&apos;s value to buyers, sellers, brokers, and agents.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">

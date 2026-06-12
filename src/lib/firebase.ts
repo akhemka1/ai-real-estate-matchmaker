@@ -39,7 +39,7 @@ export interface GoogleProfile {
 
 // Hidden from webpack so the URL import stays a native runtime ESM import.
 const nativeImport: (url: string) => Promise<Record<string, (...args: unknown[]) => unknown>> =
-  // eslint-disable-next-line @typescript-eslint/no-implied-eval
+  // eslint-disable-next-line no-new-func
   new Function("url", "return import(url)") as never;
 
 const FIREBASE_VERSION = "10.12.5";

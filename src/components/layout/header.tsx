@@ -88,7 +88,7 @@ export function Header() {
                   <>
                     <DropdownMenuItem onSelect={() => router.push(roleDashboardPath[user.role])}>
                       <User className="h-4 w-4" />
-                      {user.firstName}'s dashboard
+                      {user.firstName}&apos;s dashboard
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={handleLogout}>
                       <LogOut className="h-4 w-4" />
