@@ -8,7 +8,9 @@ from app.db.base import *  # noqa: F403
 from app.db.session import Base
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# Escape % so ConfigParser doesn't treat it as interpolation syntax (e.g. a
+# URL-encoded password like %40); it is unescaped again when read back.
+config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
