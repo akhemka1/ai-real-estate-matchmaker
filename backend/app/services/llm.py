@@ -34,7 +34,9 @@ class LLMService:
         return settings.ai_enabled
 
     def _client(self):
-        if not self.is_configured():
+        # Structured-output methods (extract_json/analyze_image) rely on Claude's
+        # forced tool use, so they require Anthropic specifically.
+        if not settings.anthropic_api_key:
             raise LLMNotConfiguredError("ANTHROPIC_API_KEY is not set")
         try:
             import anthropic  # lazy: only needed when AI is enabled
@@ -46,6 +48,14 @@ class LLMService:
 
     # --- Free-text generation -------------------------------------------
     def complete(self, *, system: str, prompt: str, max_tokens: int | None = None) -> str:
+        """Free-text generation. Uses Anthropic when set, else Gemini (free tier)."""
+        if settings.anthropic_api_key:
+            return self._anthropic_complete(system=system, prompt=prompt, max_tokens=max_tokens)
+        if settings.gemini_api_key:
+            return self._gemini_complete(system=system, prompt=prompt, max_tokens=max_tokens)
+        raise LLMNotConfiguredError("No LLM provider configured")
+
+    def _anthropic_complete(self, *, system: str, prompt: str, max_tokens: int | None = None) -> str:
         client = self._client()
         message = client.messages.create(
             model=settings.anthropic_model,
@@ -54,6 +64,36 @@ class LLMService:
             messages=[{"role": "user", "content": prompt}],
         )
         return "".join(block.text for block in message.content if block.type == "text").strip()
+
+    def _gemini_complete(self, *, system: str, prompt: str, max_tokens: int | None = None) -> str:
+        """Call Google Gemini's REST API (free tier) via httpx — no extra deps."""
+        import httpx
+
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{settings.gemini_model}:generateContent"
+        )
+        payload = {
+            "system_instruction": {"parts": [{"text": system}]},
+            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "generationConfig": {"maxOutputTokens": max_tokens or settings.anthropic_max_tokens},
+        }
+        resp = httpx.post(
+            url,
+            params={"key": settings.gemini_api_key},
+            json=payload,
+            timeout=settings.anthropic_timeout_seconds,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        candidates = data.get("candidates") or []
+        if not candidates:
+            raise RuntimeError(f"Gemini returned no candidates: {data}")
+        parts = candidates[0].get("content", {}).get("parts", [])
+        text = "".join(part.get("text", "") for part in parts).strip()
+        if not text:
+            raise RuntimeError("Gemini returned an empty response")
+        return text
 
     # --- Structured output via forced tool use --------------------------
     def extract_json(

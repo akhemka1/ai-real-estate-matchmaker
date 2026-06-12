@@ -76,6 +76,14 @@ class Settings(BaseSettings):
     anthropic_max_tokens: int = 1024
     anthropic_timeout_seconds: float = 30.0
 
+    # --- AI / LLM (Google Gemini — free-tier alternative provider) -----------
+    # When GEMINI_API_KEY is set (and ANTHROPIC_API_KEY is not), text generation
+    # (e.g. the chatbot assistant) uses Google Gemini's free tier. Get a free key
+    # at https://aistudio.google.com (no credit card required). Anthropic, when
+    # set, takes priority.
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-2.0-flash"
+
     # --- Object storage for property media (S3-compatible) -------------------
     # Works with AWS S3, Cloudflare R2, MinIO, etc. When unset, the media
     # upload endpoints report 503 (not configured) and the rest of the API is
@@ -121,7 +129,23 @@ class Settings(BaseSettings):
 
     @property
     def ai_enabled(self) -> bool:
-        return bool(self.anthropic_api_key)
+        return bool(self.anthropic_api_key or self.gemini_api_key)
+
+    @property
+    def active_ai_provider(self) -> str:
+        if self.anthropic_api_key:
+            return "anthropic"
+        if self.gemini_api_key:
+            return "gemini"
+        return "heuristic"
+
+    @property
+    def active_ai_model(self) -> str | None:
+        if self.anthropic_api_key:
+            return self.anthropic_model
+        if self.gemini_api_key:
+            return self.gemini_model
+        return None
 
     @property
     def is_production(self) -> bool:

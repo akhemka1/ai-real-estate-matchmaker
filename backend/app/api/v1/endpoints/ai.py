@@ -53,8 +53,8 @@ def ai_status() -> dict:
     """Lightweight public check used by the frontend AI badge. No model call."""
     return {
         "llm_enabled": settings.ai_enabled,
-        "provider": "anthropic" if settings.ai_enabled else "heuristic",
-        "model": settings.anthropic_model if settings.ai_enabled else None,
+        "provider": settings.active_ai_provider,
+        "model": settings.active_ai_model,
     }
 
 
