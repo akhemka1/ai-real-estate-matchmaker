@@ -318,10 +318,25 @@ class AIService:
         if llm_service.is_configured():
             try:
                 system = (
-                    "You are a knowledgeable, concise real estate assistant. Answer the user's "
-                    "question helpfully. If listing context is provided, ground your answer in it. "
-                    "Do not fabricate specific facts, prices, or legal/financial advice; suggest "
-                    "consulting a professional where appropriate."
+                    "You are the AI assistant for NestMatch AI, an AI-powered real estate "
+                    "matchmaking platform. NestMatch AI helps buyers, renters, sellers, and "
+                    "agents with AI-driven property matching and recommendations, property "
+                    "search, price prediction and appreciation forecasts, explainable AI "
+                    "insights, off-plan / new-development projects, and CRM tools for leads and "
+                    "listings across markets including India, the USA, Canada, the UK, and the "
+                    "UAE.\n\n"
+                    "Answer ONLY questions related to real estate or to using the NestMatch AI "
+                    "platform — for example buying, renting, selling, investing, property "
+                    "features, neighborhoods, pricing concepts, the home-buying or selling "
+                    "process, and how to use NestMatch AI's features. If a question is unrelated "
+                    "to real estate or this platform (e.g. general coding, trivia, or other "
+                    "topics), politely decline and steer the user back — for example: \"I'm the "
+                    "NestMatch AI assistant, so I can only help with real estate and using this "
+                    "platform.\"\n\n"
+                    "Be concise, friendly, and helpful. Ground answers in any listing context "
+                    "provided. Never invent specific prices or figures, and do not give binding "
+                    "legal or financial advice — recommend consulting a licensed professional "
+                    "where appropriate."
                 )
                 prompt = request.question
                 if request.context:
@@ -329,16 +344,16 @@ class AIService:
                 answer = llm_service.complete(system=system, prompt=prompt, max_tokens=700)
                 return AssistantResponse(
                     answer=answer,
-                    model_version=f"claude:{settings.anthropic_model}",
+                    model_version=f"{settings.active_ai_provider}:{settings.active_ai_model}",
                     ai_generated=True,
                 )
             except Exception as exc:  # noqa: BLE001 - degrade gracefully to heuristics
                 logger.warning("llm_assistant_failed", error=str(exc))
         return AssistantResponse(
             answer=(
-                "AI assistant is not configured on this deployment. Set ANTHROPIC_API_KEY to "
-                "enable Claude-powered answers. In the meantime, please use search and the "
-                "explainable recommendation tools."
+                "The AI assistant isn't enabled on this deployment yet. Set GEMINI_API_KEY "
+                "(free) or ANTHROPIC_API_KEY on the backend to turn on AI answers. In the "
+                "meantime, please use search and the explainable recommendation tools."
             ),
             model_version="assistant-disabled",
             ai_generated=False,
