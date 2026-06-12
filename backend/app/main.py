@@ -76,7 +76,9 @@ app.add_middleware(
     # Pydantic URL types serialize with a trailing slash ("http://localhost:3000/")
     # which never matches the browser's Origin header — strip it so CORS works.
     allow_origins=[str(origin).rstrip("/") for origin in settings.backend_cors_origins],
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
+    # Allow any *.vercel.app deployment (production + preview/deployment-specific
+    # URLs) and any localhost port, in addition to the explicit origins above.
+    allow_origin_regex=r"https://[a-z0-9-]+\.vercel\.app|http://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
