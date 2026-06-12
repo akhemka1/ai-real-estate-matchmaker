@@ -1,5 +1,7 @@
 """Property data access — always scoped to a single organization (tenant)."""
 
+from __future__ import annotations
+
 from sqlalchemy import Select, func, or_, select
 from sqlalchemy.orm import Session
 
